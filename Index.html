@@ -1,0 +1,426 @@
+<title>Anatomy of a Castle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one left-aligned reading column with a wide cross-section diagram as the centrepiece. Stone greys with a verdigris (weathered copper) accent. */
+:root {
+  --bg: #E8EBEC;
+  --surface: #F4F6F6;
+  --ink: #1B2227;
+  --muted: #53606A;
+  --line: #C6CED2;
+  --accent: #2A6A62;
+  --accent-soft: #D3E5E1;
+  --on-accent: #FFFFFF;
+  --bad: #A5362E;
+  --bad-soft: #F2DAD7;
+  --wall: #B9C0C4;
+  --wall-hi: #CFD6D9;
+  --edge: #66717A;
+  --water: #9DBFD3;
+  --ground: #CEC8BA;
+  --slit: #2A333A;
+  --font-display: "IM Fell English", Georgia, "Times New Roman", serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161A; --surface: #192027; --ink: #E3E8EA; --muted: #98A5AD; --line: #2C373F;
+    --accent: #6FB8AC; --accent-soft: #1D3430; --on-accent: #0F1A18; --bad: #E58A82; --bad-soft: #3A2220;
+    --wall: #4A555C; --wall-hi: #5D6A72; --edge: #89959C; --water: #2B4859; --ground: #2B2A26; --slit: #0B0F12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161A; --surface: #192027; --ink: #E3E8EA; --muted: #98A5AD; --line: #2C373F;
+  --accent: #6FB8AC; --accent-soft: #1D3430; --on-accent: #0F1A18; --bad: #E58A82; --bad-soft: #3A2220;
+  --wall: #4A555C; --wall-hi: #5D6A72; --edge: #89959C; --water: #2B4859; --ground: #2B2A26; --slit: #0B0F12;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 64px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2.6rem, 9vw, 4.6rem); letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.8rem, 5vw, 2.5rem); }
+h3 { font-size: 1.3rem; }
+p { margin: 0; }
+.eyebrow { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.lede { font-size: 1.25rem; max-width: 34em; color: var(--ink); }
+.hero { display: flex; flex-direction: column; gap: 16px; padding-top: 12px; }
+.sec { display: flex; flex-direction: column; gap: 20px; }
+.sec > p { max-width: 38em; color: var(--muted); }
+
+/* Diagram */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.stage svg { width: 100%; height: auto; display: block; }
+.axis { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.shape { fill: var(--wall); stroke: var(--edge); stroke-width: 1.5; transition: fill .2s, stroke .2s; }
+.shape.water { fill: var(--water); }
+.slit { fill: var(--slit); }
+.ground { fill: var(--ground); }
+.flag { fill: var(--accent); }
+.attack { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 5; }
+.attack-dot { fill: var(--muted); }
+.f { cursor: pointer; transition: opacity .2s; }
+svg[data-active] .f:not(.is-active) { opacity: .6; }
+.f.is-active .shape { stroke: var(--accent); stroke-width: 3; }
+.f.is-active .shape:not(.water) { fill: var(--wall-hi); }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button {
+  font: inherit; font-size: 0.95rem; font-weight: 600; color: var(--ink);
+  background: transparent; border: 1px solid var(--line); border-radius: 4px;
+  padding: 8px 14px; cursor: pointer; min-height: 40px;
+}
+.tabs button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.tabs button:focus-visible, .f:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.panel { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.panel .stops { font-size: 0.95rem; color: var(--accent); font-weight: 600; }
+.panel p { max-width: 40em; }
+
+/* Siege table */
+.rows { border-bottom: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 8px 32px; padding: 18px 0; border-top: 1px solid var(--line); }
+.row p { color: var(--muted); }
+@media (max-width: 560px) { .row { grid-template-columns: minmax(0, 1fr); } }
+
+/* Gate sequence */
+.gate { list-style: none; counter-reset: g; margin: 0; padding: 0; display: flex; flex-direction: column; max-width: 40em; }
+.gate li { counter-increment: g; position: relative; padding: 0 0 22px 52px; }
+.gate li::before {
+  content: counter(g); position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-weight: 700; display: grid; place-items: center;
+}
+.gate li::after { content: ""; position: absolute; left: 16.5px; top: 38px; bottom: 4px; width: 1px; background: var(--line); }
+.gate li:last-child { padding-bottom: 0; }
+.gate li:last-child::after { display: none; }
+.gate strong { display: block; font-size: 1.05rem; }
+.gate span { color: var(--muted); }
+.note { max-width: 40em; border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+.note b { color: var(--ink); }
+
+/* Myths + glossary */
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 32px; }
+.pair > div { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pair p { color: var(--muted); }
+dl.gloss { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 20px 32px; }
+dl.gloss div { min-width: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+dl.gloss dt { font-family: var(--font-display); font-size: 1.2rem; }
+dl.gloss dd { margin: 2px 0 0; color: var(--muted); font-size: 0.95rem; }
+/* Quiz */
+.quiz { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: flex; flex-direction: column; gap: 16px; max-width: 680px; }
+.q-top { display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.q-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.q-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.quiz h3 { font-size: 1.45rem; line-height: 1.25; }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opts button { text-align: left; font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; cursor: pointer; min-height: 46px; }
+.opts button:hover:not(:disabled) { border-color: var(--accent); }
+.opts button:disabled { cursor: default; }
+.opts button.right { border-color: var(--accent); background: var(--accent-soft); }
+.opts button.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opts button:focus-visible, .q-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.q-feedback { display: flex; flex-direction: column; gap: 6px; }
+.q-feedback strong { font-size: 1.05rem; }
+.q-feedback p { color: var(--muted); }
+.q-btn { align-self: flex-start; font: inherit; font-weight: 600; color: var(--on-accent); background: var(--accent); border: 0; border-radius: 4px; padding: 10px 20px; min-height: 44px; cursor: pointer; }
+.q-score { font-family: var(--font-display); font-size: clamp(3rem, 12vw, 4.5rem); line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow">Medieval fortification, 11th to 15th century</span>
+    <h1>Anatomy of a Castle</h1>
+    <p class="lede">Every part of a castle did one job: make the attacker's next step harder than the last. Pick a part below to see what it was for.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="h-cut">
+    <h2 id="h-cut">A castle in cross-section</h2>
+    <p>This stylised slice shows a concentric castle: two rings of wall, each higher than the one outside it, around a central keep. An attacker comes from the left and has to beat every layer in turn.</p>
+    <div class="stage">
+      <svg id="cut" viewBox="0 0 760 380" role="img" aria-label="Cross-section of a concentric castle: ditch, low outer wall, tower and higher inner wall, then the central keep, mirrored on both sides." data-active="moat">
+        <rect class="ground" x="0" y="300" width="760" height="80"/>
+
+        <!-- left half -->
+        <g class="f f-moat is-active" data-f="moat"><rect class="shape water" x="40" y="300" width="70" height="46"/></g>
+        <g class="f f-outer" data-f="outer">
+          <polygon class="shape" points="103,300 110,284 110,300"/>
+          <rect class="shape" x="110" y="225" width="26" height="75"/>
+          <rect class="shape" x="110" y="217" width="8" height="8"/>
+          <rect class="shape" x="128" y="217" width="8" height="8"/>
+        </g>
+        <g class="f f-towers" data-f="towers">
+          <rect class="shape" x="172" y="118" width="50" height="182"/>
+          <rect class="shape" x="172" y="108" width="9" height="10"/>
+          <rect class="shape" x="191" y="108" width="9" height="10"/>
+          <rect class="shape" x="210" y="108" width="9" height="10"/>
+          <rect class="slit" x="192" y="170" width="4" height="30"/>
+        </g>
+        <g class="f f-inner" data-f="inner">
+          <rect class="shape" x="222" y="160" width="30" height="140"/>
+          <rect class="shape" x="222" y="151" width="7" height="9"/>
+          <rect class="shape" x="233" y="151" width="7" height="9"/>
+          <rect class="shape" x="245" y="151" width="7" height="9"/>
+        </g>
+
+        <!-- right half, mirrored -->
+        <g transform="translate(760,0) scale(-1,1)">
+          <g class="f f-moat is-active" data-f="moat"><rect class="shape water" x="40" y="300" width="70" height="46"/></g>
+          <g class="f f-outer" data-f="outer">
+            <polygon class="shape" points="103,300 110,284 110,300"/>
+            <rect class="shape" x="110" y="225" width="26" height="75"/>
+            <rect class="shape" x="110" y="217" width="8" height="8"/>
+            <rect class="shape" x="128" y="217" width="8" height="8"/>
+          </g>
+          <g class="f f-towers" data-f="towers">
+            <rect class="shape" x="172" y="118" width="50" height="182"/>
+            <rect class="shape" x="172" y="108" width="9" height="10"/>
+            <rect class="shape" x="191" y="108" width="9" height="10"/>
+            <rect class="shape" x="210" y="108" width="9" height="10"/>
+            <rect class="slit" x="192" y="170" width="4" height="30"/>
+          </g>
+          <g class="f f-inner" data-f="inner">
+            <rect class="shape" x="222" y="160" width="30" height="140"/>
+            <rect class="shape" x="222" y="151" width="7" height="9"/>
+            <rect class="shape" x="233" y="151" width="7" height="9"/>
+            <rect class="shape" x="245" y="151" width="7" height="9"/>
+          </g>
+        </g>
+
+        <!-- keep -->
+        <g class="f f-keep" data-f="keep">
+          <rect class="shape" x="320" y="70" width="120" height="230"/>
+          <rect class="shape" x="320" y="58" width="12" height="12"/>
+          <rect class="shape" x="347" y="58" width="12" height="12"/>
+          <rect class="shape" x="374" y="58" width="12" height="12"/>
+          <rect class="shape" x="401" y="58" width="12" height="12"/>
+          <rect class="shape" x="428" y="58" width="12" height="12"/>
+          <rect class="slit" x="376" y="105" width="8" height="34"/>
+          <rect class="slit" x="376" y="190" width="8" height="34"/>
+          <line x1="380" y1="58" x2="380" y2="24" stroke="var(--edge)" stroke-width="2"/>
+          <polygon class="flag" points="380,24 410,32 380,40"/>
+        </g>
+
+        <!-- incoming stone -->
+        <path class="attack" d="M10,292 Q56,160 108,230"/>
+        <circle class="attack-dot" cx="10" cy="292" r="5"/>
+      </svg>
+      <div class="axis"><span>Attackers' side</span><span>Inside the castle</span></div>
+
+      <div class="tabs" role="group" aria-label="Choose a part of the castle">
+        <button type="button" data-f="moat" aria-pressed="true">Ditch</button>
+        <button type="button" data-f="outer" aria-pressed="false">Outer wall</button>
+        <button type="button" data-f="towers" aria-pressed="false">Towers</button>
+        <button type="button" data-f="inner" aria-pressed="false">Inner wall</button>
+        <button type="button" data-f="keep" aria-pressed="false">Keep</button>
+      </div>
+      <div class="panel" aria-live="polite">
+        <h3 id="p-title">Ditch or moat</h3>
+        <p id="p-text">A ditch cut around the outer wall, wet or dry. It holds siege towers and rams back from the wall, makes ladders longer and harder to handle, and stops miners tunnelling under the wall, because a tunnel beneath water floods. Many castles had a dry ditch only. A moat full of water needed a river or spring to feed it.</p>
+        <p class="stops" id="p-stops">Stops: siege towers, battering rams, mining</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-siege">
+    <h2 id="h-siege">What attackers tried, and the answer</h2>
+    <p>Medieval armies had a small set of tools. Castle builders learned an answer to each.</p>
+    <div class="rows">
+      <div class="row"><h3>Scaling ladders</h3><p>Tall walls kept the climb long, and a ditch kept ladder bases far from the foot of the wall. Defenders on the wall-walk could push ladders off or drop stones on the climbers.</p></div>
+      <div class="row"><h3>Siege towers</h3><p>A wide ditch stopped a heavy tower from rolling up to the wall. Towers covered in fresh animal hides were harder to set alight, so defenders shot fire arrows and used water.</p></div>
+      <div class="row"><h3>Battering rams</h3><p>The ditch, a raised drawbridge, a portcullis and barred doors all stood between a ram and the gate. Overhanging parapets let defenders drop heavy objects onto the ram's crew.</p></div>
+      <div class="row"><h3>Mining under the wall</h3><p>Water-filled ditches, foundations cut into rock, round towers with no corners to undermine, and counter-mines dug by defenders to meet the attackers' tunnel.</p></div>
+      <div class="row"><h3>Trebuchets and catapults</h3><p>Thick stone walls with a sloping base. Defenders often had engines of their own on the towers to fire back at the crews.</p></div>
+      <div class="row"><h3>Starvation</h3><p>Wells inside the walls, stores of grain, and livestock kept in the bailey. At Kenilworth in 1266 the garrison held out for about six months.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-gate">
+    <h2 id="h-gate">Getting through the gate</h2>
+    <p>The gate was the weakest point of any wall, so it received the most defences. A well-built gatehouse made an attacker pass through all of these.</p>
+    <ol class="gate">
+      <li><strong>Drawbridge</strong><span>Raised at night or under threat, leaving a gap across the ditch.</span></li>
+      <li><strong>Barbican</strong><span>A walled forecourt in front of the gate. Attackers bunched up inside it while archers fired from above.</span></li>
+      <li><strong>Portcullis</strong><span>A heavy grille of timber or iron-shod wood, dropped down grooves in the gate passage.</span></li>
+      <li><strong>Murder holes</strong><span>Openings in the ceiling of the passage. Defenders dropped stones through them or poured water to put out fires.</span></li>
+      <li><strong>Barred doors</strong><span>Thick timber doors held shut by a heavy beam across the back.</span></li>
+      <li><strong>Second portcullis</strong><span>Dropped behind anyone who got through, trapping them in the passage under fire.</span></li>
+    </ol>
+    <p class="note"><b>Bent entrances.</b> Some castles made the path through the gate turn sharply. That slowed a charge, gave defenders a clear shot at an attacker's unshielded right side, and kept a ram from getting a straight run.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-more">
+    <h2 id="h-more">Details that mattered</h2>
+    <div class="pair">
+      <div>
+        <h3>Arrow loops</h3>
+        <p>Narrow slits, wide on the inside. An archer had a broad angle to shoot across, while an enemy outside had a tiny target. Crossbow loops often added a horizontal slot for aiming.</p>
+      </div>
+      <div>
+        <h3>Sloping wall bases</h3>
+        <p>A plinth or batter thickened the foot of the wall. Stones dropped from above bounced outward into attackers, and the extra mass made undermining harder.</p>
+      </div>
+      <div>
+        <h3>Hoardings and machicolations</h3>
+        <p>Timber galleries (hoardings), later replaced by stone ones (machicolations), jutted from the top of the wall. Defenders could drop things straight down onto anyone at the base.</p>
+      </div>
+      <div>
+        <h3>A myth to be careful with</h3>
+        <p>People often say spiral stairs turned clockwise going up so right-handed defenders had room to swing a sword. Historians dispute it, and many castle stairs turn the other way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-end">
+    <h2 id="h-end">Why castles stopped working</h2>
+    <p>No castle was unbeatable. Most fell to hunger, treachery or a long siege rather than a single assault. From the 15th century, powerful cannon could crack tall stone walls, and fortresses were rebuilt lower and thicker, with angled earth-backed bastions that absorbed shot.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-quiz">
+    <h2 id="h-quiz">Test yourself</h2>
+    <p>Seven questions on what you just read. Pick an answer to see why it is right or wrong.</p>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-gloss">
+    <h2 id="h-gloss">Terms</h2>
+    <dl class="gloss">
+      <div><dt>Bailey</dt><dd>The open yard inside the walls, with stables, workshops and storerooms.</dd></div>
+      <div><dt>Barbican</dt><dd>A fortified outwork guarding the approach to a gate.</dd></div>
+      <div><dt>Bartizan</dt><dd>A small turret hanging from the corner of a wall or tower.</dd></div>
+      <div><dt>Crenel and merlon</dt><dd>The gap and the solid block alternating along a parapet.</dd></div>
+      <div><dt>Curtain wall</dt><dd>The main wall enclosing the castle's courtyard.</dd></div>
+      <div><dt>Embrasure</dt><dd>An opening in a wall, usually splayed inside, for shooting through.</dd></div>
+      <div><dt>Motte</dt><dd>An artificial earth mound that carried an early timber tower.</dd></div>
+      <div><dt>Portcullis</dt><dd>A sliding grille that closes a gate passage.</dd></div>
+      <div><dt>Postern</dt><dd>A small back door, used for sallies or slipping messengers out.</dd></div>
+      <div><dt>Wall-walk</dt><dd>The walkway along the top of a wall, behind the parapet.</dd></div>
+    </dl>
+  </section>
+
+  <footer>Sizes and dates are typical, not universal. Castles varied widely by region, period and budget.</footer>
+</div>
+
+<script>
+(function () {
+  var DATA = {
+    moat: { t: "Ditch or moat", p: "A ditch cut around the outer wall, wet or dry. It holds siege towers and rams back from the wall, makes ladders longer and harder to handle, and stops miners tunnelling under the wall, because a tunnel beneath water floods. Many castles had a dry ditch only. A moat full of water needed a river or spring to feed it.", s: "Stops: siege towers, battering rams, mining" },
+    outer: { t: "Outer wall", p: "A lower wall ringing the castle. Attackers who take it are stuck in a narrow outer ward, standing under fire from the taller wall behind. Castles built to this concentric plan in the late 13th century include Caerphilly and Beaumaris.", s: "Stops: a quick rush, anyone who breaches only one wall" },
+    towers: { t: "Towers", p: "Towers stick out from the wall so archers can shoot along its face at anyone climbing or digging. Round towers, common from the 12th and 13th centuries, have no corners for a ram or miner to pick at and give a wide field of fire. Narrow arrow loops let archers shoot while staying hard to hit.", s: "Stops: ladders, rams, sappers working at the wall base" },
+    inner: { t: "Inner wall", p: "The main curtain wall: tall, often 2 to 4 metres thick, and sloped outward at the base. A walkway along the top let defenders reach any threatened point fast. The parapet had gaps (crenels) to shoot through and solid blocks (merlons) to shelter behind.", s: "Stops: scaling, trebuchet stones, undermining" },
+    keep: { t: "Keep", p: "The strongest building and the last refuge, with its own well, stores and living rooms. Entrances were often on the first floor, reached by a stair that could be removed or burned. Even after the walls fell, a determined garrison could hold out here.", s: "Stops: the final assault, and gives defenders somewhere to fall back to" }
+  };
+  var svg = document.getElementById("cut");
+  var btns = document.querySelectorAll(".tabs button");
+  var groups = document.querySelectorAll(".f");
+  var title = document.getElementById("p-title");
+  var text = document.getElementById("p-text");
+  var stops = document.getElementById("p-stops");
+
+  function show(id) {
+    var d = DATA[id];
+    if (!d) return;
+    svg.setAttribute("data-active", id);
+    groups.forEach(function (g) { g.classList.toggle("is-active", g.classList.contains("f-" + id)); });
+    btns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-f") === id ? "true" : "false"); });
+    title.textContent = d.t;
+    text.textContent = d.p;
+    stops.textContent = d.s;
+  }
+  btns.forEach(function (b) { b.addEventListener("click", function () { show(b.getAttribute("data-f")); }); });
+  groups.forEach(function (g) { g.addEventListener("click", function () { show(g.getAttribute("data-f")); }); });
+})();
+
+(function () {
+  var Q = [
+    { q: "Why did builders favour round towers over square ones?", o: ["They were cheaper to build", "They had no corners to undermine and gave a wider field of fire", "They held more soldiers", "They looked more impressive from far away"], a: 1, why: "A ram or miner can work at a square corner. A round tower has none, and it lets archers cover more ground." },
+    { q: "What is the main advantage of a concentric castle, with an inner wall higher than the outer wall?", o: ["Defenders on the inner wall can shoot over the outer wall", "It needs fewer stones", "The keep is easier to see", "Attackers cannot find the gate"], a: 0, why: "Archers on the taller inner wall fire over their own outer wall. Attackers who take the outer wall are still under fire." },
+    { q: "What were murder holes in a gatehouse used for?", o: ["Letting light into the passage", "Dropping stones or water on attackers below", "Passing messages to the keep", "Storing arrows"], a: 1, why: "They were openings in the ceiling of the gate passage. Boiling oil is mostly myth, since oil was expensive and stones and water were cheaper." },
+    { q: "Why were many castle walls sloped outward at the base?", o: ["To make the wall look taller", "To let rainwater run off", "Dropped stones bounced into attackers, and the base was harder to undermine", "To make ladders easier to place"], a: 2, why: "The sloping base, called a batter or plinth, added mass at the foot of the wall and sent falling stones outward." },
+    { q: "Which feature best protected a castle from miners tunnelling under the wall?", o: ["Wider arrow loops", "A taller keep", "More merlons on the parapet", "A water-filled ditch"], a: 3, why: "A tunnel dug under water floods. Defenders also dug counter-mines to meet the attackers' tunnel." },
+    { q: "What was a barbican?", o: ["A walled forecourt in front of a gate", "A kind of siege engine", "The lord's private chapel", "The top floor of the keep"], a: 0, why: "It made attackers bunch up in a confined space under fire before they even reached the gate." },
+    { q: "Roughly how long did the garrison at Kenilworth hold out in the siege of 1266?", o: ["Three days", "Two weeks", "About six months", "Five years"], a: 2, why: "Stores, wells and thick walls let defenders outlast attackers. Starvation was how many castles finally fell." }
+  ];
+  var root = document.getElementById("quiz");
+  var i = 0, score = 0;
+
+  function mk(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+
+  function render() {
+    root.textContent = "";
+    if (i >= Q.length) return finish();
+    var item = Q[i];
+
+    var top = mk("div", "q-top");
+    top.appendChild(mk("span", "", "Question " + (i + 1) + " of " + Q.length));
+    top.appendChild(mk("span", "", "Score " + score));
+    var bar = mk("div", "q-bar");
+    var fill = mk("i");
+    fill.style.width = (i / Q.length * 100) + "%";
+    bar.appendChild(fill);
+
+    var opts = mk("div", "opts");
+    var fb = mk("div", "q-feedback");
+    fb.setAttribute("aria-live", "polite");
+    var btns = [];
+
+    item.o.forEach(function (text, k) {
+      var b = mk("button", "", text);
+      b.type = "button";
+      b.addEventListener("click", function () {
+        btns.forEach(function (x) { x.disabled = true; });
+        var ok = k === item.a;
+        if (ok) score++;
+        b.classList.add(ok ? "right" : "wrong");
+        btns[item.a].classList.add("right");
+        fb.appendChild(mk("strong", "", ok ? "Correct." : "Not quite."));
+        fb.appendChild(mk("p", "", item.why));
+        var next = mk("button", "q-btn", i + 1 < Q.length ? "Next question" : "See my score");
+        next.type = "button";
+        next.addEventListener("click", function () { i++; render(); });
+        fb.appendChild(next);
+        next.focus();
+        fill.style.width = ((i + 1) / Q.length * 100) + "%";
+      });
+      btns.push(b);
+      opts.appendChild(b);
+    });
+
+    root.appendChild(top);
+    root.appendChild(bar);
+    root.appendChild(mk("h3", "", item.q));
+    root.appendChild(opts);
+    root.appendChild(fb);
+  }
+
+  function finish() {
+    var msg = score === Q.length ? "Flawless. Nothing gets past you." :
+              score >= 5 ? "A solid defence. A few gaps to patch." :
+              score >= 3 ? "The outer wall held, but the keep needs work." :
+              "The gate fell. Read through the sections above and try again.";
+    root.appendChild(mk("div", "q-top")).appendChild(mk("span", "", "Finished"));
+    root.appendChild(mk("div", "q-score", score + " / " + Q.length));
+    root.appendChild(mk("p", "", msg));
+    var again = mk("button", "q-btn", "Try again");
+    again.type = "button";
+    again.addEventListener("click", function () { i = 0; score = 0; render(); });
+    root.appendChild(again);
+  }
+
+  render();
+})();
+</script>
